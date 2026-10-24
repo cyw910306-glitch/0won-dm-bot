@@ -1,0 +1,1 @@
+{ "name": "0won-dm-bot", "private": true, "type": "module", "scripts": { "test": "node test.mjs" } }
