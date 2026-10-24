@@ -29,9 +29,9 @@ async function safe(fn, ...a) {
 // ponytail: 게시물당 최근 댓글 100개만 본다. 댓글이 많아지면 KV 저장으로 올릴 것.
 async function alreadySent(mediaId, userId, commentId, ownerId) {
   if (!mediaId || !userId) return false;
-  const { data = [] } = await ig(`/${mediaId}/comments?fields=id,from,replies&limit=100`);
-  const mine = new Set(data.filter((x) => x.from?.id === ownerId).map((x) => x.id));
-  return data.some((x) => x.id !== commentId && x.from?.id === userId && x.replies?.data?.some((r) => mine.has(r.id)));
+  // 내 답글은 최상위가 아니라 각 댓글의 replies 안에 있다(from 을 같이 받아야 누가 단 답글인지 안다)
+  const { data = [] } = await ig(`/${mediaId}/comments?fields=id,from,replies{id,from}&limit=100`);
+  return data.some((x) => x.id !== commentId && x.from?.id === userId && x.replies?.data?.some((r) => r.from?.id === ownerId));
 }
 
 export async function onComment(v, ownerId, replyText) {
@@ -39,9 +39,9 @@ export async function onComment(v, ownerId, replyText) {
   // 웹훅 내용을 믿지 않고 API 로 댓글을 다시 읽는다(위조 이벤트 차단: 내 게시물의 실제 댓글만 통과).
   const c = await ig(`/${v.id}?fields=text,from,media`);
   if (c.from?.id === ownerId) return; // 내 답글은 무시
-  // 키워드가 있으면 그 자료, 없으면 그 게시물의 자료(어떤 댓글이든 DM)
-  const kw = findKeyword(c.text) ?? POSTS[c.media?.id] ?? DEFAULT;
-  if (!KEYWORDS[kw]) return; // 키워드도 기본 자료도 없으면 조용히 넘어간다
+  // 게시물에 고정 자료가 있으면 그것(댓글 속 다른 키워드 무시), 없으면 키워드, 둘 다 없으면 기본 자료
+  const kw = POSTS[c.media?.id] ?? findKeyword(c.text) ?? DEFAULT;
+  if (!isOpen(kw)) return; // 자료가 없거나 아직 공개 전이면 조용히 넘어간다
   const publicReply = (message) => safe(async function publicReply() { await ig(`/${v.id}/replies`, { method: "POST", body: { message } }); });
   if (await alreadySent(c.media?.id, c.from?.id, v.id, ownerId)) return publicReply(replyText ?? MSG.again); // 두 번째 댓글: DM 없이 답글만
   // 댓글당 1회만 가능한 비공개 답장. 버튼이 있어야 상대가 눌러서 대화창이 열린다.
