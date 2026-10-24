@@ -1,5 +1,7 @@
 # 0won DM 봇 · 인스타 댓글 → DM 자동화 (0원)
 
+<p align="center"><img src="docs/demo.gif" width="300" alt="댓글 → 버튼 DM → 팔로우 확인 → 링크"></p>
+
 인스타 게시물에 댓글이 달리면 자동으로:
 
 1. 댓글에 공개 답글 ("DM 보냈어요 📩")
@@ -146,6 +148,10 @@ export const REQUIRE_FOLLOW = true;               // 팔로우 확인 끄려면 
 ```bash
 node test.mjs   # 가짜 메타 서버로 전체 흐름 확인 (설치 필요 없음, Node 18+)
 ```
+
+## English
+
+Free, self-hosted alternative to paid Instagram comment-to-DM tools. Someone comments on your post, the bot replies publicly, sends a button DM, checks that they follow you, then sends the link. Runs on Vercel's free tier with Meta's official Instagram API (Instagram Login, no Facebook Page needed). Keywords, default resource, per-post resources, follow gate and scheduled keywords are all in `lib/config.js`. Setup steps above are in Korean; any AI coding assistant can translate and walk you through them. Note: Vercel Hobby is for personal, non-commercial use.
 
 ## 라이선스
 
